@@ -1,8 +1,0 @@
-{
-    "appService.zipIgnorePattern": [
-        "node_modules{,/**}",
-        ".vscode{,/**}"
-    ],
-    "appService.defaultWebAppToDeploy": "/subscriptions/19eda9f2-0a7d-4388-b8fd-0b5d0df993e6/resourceGroups/wa-zob_group/providers/Microsoft.Web/sites/wa-zob",
-    "appService.deploySubpath": "."
-}

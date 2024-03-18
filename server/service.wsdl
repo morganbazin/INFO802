@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" 
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+             xmlns:tns="http://www.exemple.com/temps_trajet"
+             targetNamespace="http://www.exemple.com/temps_trajet" 
+             name="ServiceTempsTrajet">
+
+    <!-- Types (Définition des types de données utilisés) -->
+    <types>
+        <xsd:schema targetNamespace="http://www.exemple.com/temps_trajet">
+            <xsd:element name="CalculTempsTrajetRequest">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="longStart" type="xsd:float"/>
+                        <xsd:element name="latStart" type="xsd:float"/>
+                        <xsd:element name="longEnd" type="xsd:float"/>
+                        <xsd:element name="latEnd" type="xsd:float"/>
+                        <xsd:element name="distance" type="xsd:float"/>
+                        <xsd:element name="autonomie" type="xsd:float"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="CalculTempsTrajetResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="tempsEstime" type="xsd:float"/>
+                        <xsd:element name="distanceTotal" type="xsd:float"/>
+                        <xsd:element name="segments" type="xsd:Array"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </types>
+
+    <!-- Messages (Requêtes et Réponses) -->
+    <message name="CalculTempsTrajetRequest">
+        <part name="parameters" element="tns:CalculTempsTrajetRequest"/>
+    </message>
+    <message name="CalculTempsTrajetResponse">
+        <part name="parameters" element="tns:CalculTempsTrajetResponse"/>
+    </message>
+
+    <!-- Port Type (Définition des Opérations) -->
+    <portType name="TempsTrajetPortType">
+        <operation name="calculerTempsTrajet">
+            <input message="tns:CalculTempsTrajetRequest"/>
+            <output message="tns:CalculTempsTrajetResponse"/>
+        </operation>
+    </portType>
+
+    <!-- Binding (Liaison avec le protocole SOAP) -->
+    <binding name="TempsTrajetBinding" type="tns:TempsTrajetPortType">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="calculerTempsTrajet">
+            <soap:operation soapAction="http://www.exemple.com/temps_trajet/calculerTempsTrajet"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+
+    <!-- Service (Définition des Endpoints) -->
+    <service name="ServiceTempsTrajet">
+        <port name="TempsTrajetPort" binding="tns:TempsTrajetBinding">
+            <soap:address location="http://localhost:8001/wsdl"/>
+        </port>
+    </service>
+
+</definitions>
