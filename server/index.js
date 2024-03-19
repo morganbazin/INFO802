@@ -105,9 +105,9 @@ function calculerDistanceEntrePoints(point1, point2) {
   const a =
     Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
     Math.cos(radLat1) *
-      Math.cos(radLat2) *
-      Math.sin(deltaLon / 2) *
-      Math.sin(deltaLon / 2);
+    Math.cos(radLat2) *
+    Math.sin(deltaLon / 2) *
+    Math.sin(deltaLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -217,7 +217,7 @@ soap.listen(server, "/wsdl", myService, xml, function () {
 var app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://morgan.makeprops.fr",
   })
 );
 //body parser middleware are supported (optional)

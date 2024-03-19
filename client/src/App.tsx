@@ -63,7 +63,7 @@ function App() {
   }
 
   const callSoapService = async () => {
-    const url = "http://localhost:8000/wsdl";
+    const url = "https://apimorgan.makeprops.fr/wsdl";
     const headers = {
       "Content-Type": "text/xml;charset=UTF-8",
       SOAPAction: "http://www.exemple.com/temps_trajet/calculerTempsTrajet",
