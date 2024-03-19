@@ -11,26 +11,23 @@ var bodyParser = require("body-parser");
 
 const axios = require("axios");
 
-var cors = require("cors"); // Require the cors package
+var cors = require("cors");
 
-async function calculerTrajetAvecArretsRecharge(depart, arrivee, autonomie) {
+async function calculTravelWithStopCharging(departure, arrival, autonomy) {
   try {
-    let trajetComplet = {
-      distanceTotale: 0,
-      tempsEstimeSansRecharge: 0,
+    let travelComplete = {
+      distanceComplete: 0,
+      timeEstimateWithoutCharging: 0,
       segments: [],
     };
 
-    // Obtenir le trajet initial
-    let trajet = await getRoute(depart, arrivee);
-    console.log("calculerTrajetAvecArretsRecharge : ", trajet);
+    let travel = await getRoute(departure, arrival);
     let feature;
-    // Vérifier si le trajet a des features et des propriétés
-    if (trajet && trajet.features && trajet.features.length > 0) {
-      feature = trajet.features[0];
+    if (travel && travel.features && travel.features.length > 0) {
+      feature = travel.features[0];
       if (feature.properties && feature.properties.summary) {
-        trajetComplet.distanceTotale = feature.properties.summary.distance;
-        trajetComplet.tempsEstimeSansRecharge =
+        travelComplete.distanceComplete = feature.properties.summary.distance;
+        travelComplete.timeEstimateWithoutCharging =
           feature.properties.summary.duration;
       } else {
         throw new Error(
@@ -41,63 +38,60 @@ async function calculerTrajetAvecArretsRecharge(depart, arrivee, autonomie) {
       throw new Error("Données de trajet invalides ou manquantes");
     }
 
-    // Supposons que les waypoints sont disponibles dans feature.geometry.coordinates
     let waypoints = feature.geometry.coordinates;
-    let distanceParcourue = 0;
-    let autonomieRestante = autonomie;
+    let distanceDone = 0;
+    let autonomyRemaining = autonomy;
 
     for (let i = 0; i < waypoints.length - 1; i++) {
       let currentWaypoint = waypoints[i];
       let nextWaypoint = waypoints[i + 1];
-      let segmentDistance = calculerDistanceEntrePoints(
+      let segmentDistance = calculDistanceBetweenPoints(
         currentWaypoint,
         nextWaypoint
       );
-      distanceParcourue += segmentDistance;
+      distanceDone += segmentDistance;
 
-      if (distanceParcourue >= autonomieRestante) {
-        let bornesPotentielles = await requestBorne(
+      if (distanceDone >= autonomyRemaining) {
+        let potentialBornes = await requestBorne(
           currentWaypoint,
-          autonomieRestante
+          autonomyRemaining
         );
-        if (!bornesPotentielles || bornesPotentielles.total_count === 0) {
+        if (!potentialBornes || potentialBornes.total_count === 0) {
           throw new Error(
             "Aucune borne trouvée à proximité de l'étape actuelle"
           );
         }
-        let borneChoisie = bornesPotentielles.results[0]; // Prendre la première borne pour cet exemple
+        let borneChosen = potentialBornes.results[0];
 
-        trajetComplet.segments.push({
+        travelComplete.segments.push({
           depart: currentWaypoint,
-          arrivee: [borneChoisie.xlongitude, borneChoisie.ylatitude],
-          distance: distanceParcourue,
-          tempsEstime: calculerTempsSegment(distanceParcourue),
-          borneRecharge: borneChoisie,
+          arrivee: [borneChosen.xlongitude, borneChosen.ylatitude],
+          distance: distanceDone,
+          tempsEstime: calculeTimeSegment(distanceDone),
+          borneRecharge: borneChosen,
         });
 
-        distanceParcourue = 0; // Réinitialiser la distance parcourue après la recharge
-        autonomieRestante = autonomie; // Réinitialiser l'autonomie après la recharge
+        distanceDone = 0;
+        autonomyRemaining = autonomy;
       }
     }
 
-    console.log("trajetComplet : ", trajetComplet);
-
-    return trajetComplet;
+    return travelComplete;
   } catch (error) {
     console.error("Erreur lors du calcul du trajet:", error.message);
     return null;
   }
 }
 
-function calculerDistanceEntrePoints(point1, point2) {
-  const rayonTerre = 6371; // Rayon de la Terre en kilomètres
+function calculDistanceBetweenPoints(point1, point2) {
+  const rayonEarth = 6371;
 
   const lat1 = point1[1];
   const lon1 = point1[0];
   const lat2 = point2[1];
   const lon2 = point2[0];
 
-  const radLat1 = lat1 * (Math.PI / 180); // Convertir en radians
+  const radLat1 = lat1 * (Math.PI / 180);
   const radLat2 = lat2 * (Math.PI / 180);
   const deltaLat = (lat2 - lat1) * (Math.PI / 180);
   const deltaLon = (lon2 - lon1) * (Math.PI / 180);
@@ -111,27 +105,26 @@ function calculerDistanceEntrePoints(point1, point2) {
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  const distance = rayonTerre * c; // Distance en kilomètres
+  const distance = rayonEarth * c;
 
   return distance;
 }
 
-function calculerTempsSegment(distance) {
-  const vitesseMoyenne = 130; // Vitesse moyenne en km/h
-  return (distance / vitesseMoyenne) * 60; // Retourner le temps en minutes
+function calculeTimeSegment(distance) {
+  const speedMoyenne = 130;
+  return (distance / speedMoyenne) * 60;
 }
 
-// Exemple d'utilisation de la fonction
-async function calculerTempsTrajet(args) {
-  let autonomie = args.autonomie;
+async function calculTimeTravel(args) {
+  let autonomy = args.autonomie;
   let start = JSON.parse(args.start);
   let end = JSON.parse(args.end);
 
-  let resultat = await calculerTrajetAvecArretsRecharge(start, end, autonomie);
+  let resultat = await calculTravelWithStopCharging(start, end, autonomy);
 
   return {
-    distanceTotale: resultat.distanceTotale,
-    tempsEstime: resultat.tempsEstimeSansRecharge,
+    distanceTotale: resultat.distanceComplete,
+    tempsEstime: resultat.timeEstimateWithoutCharging,
     segments: resultat.segments,
   };
 }
@@ -142,14 +135,11 @@ let requestParams = (x, y) => {
   )})', ${y}km)`;
 };
 
-let requestBorne = async (coords, autonomie) => {
-  // fetch get  with requestParams(x,y) and return response with axios
+let requestBorne = async (coords, autonomy) => {
 
   const baseUrl =
     "http://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve/records";
-  console.log(coords);
-  const queryParams = requestParams(coords, autonomie);
-  console.log(queryParams);
+  const queryParams = requestParams(coords, autonomy);
   const url = `${baseUrl}${queryParams}`;
 
   try {
@@ -160,12 +150,8 @@ let requestBorne = async (coords, autonomie) => {
   }
 };
 
-/*requestBorne(-1.520945392076356, 43.52670810565958)
-    .then(data => console.log(data))
-    .catch(error => console.error('Error:', error));*/
-
 async function getRoute(start, end) {
-  const apiKey = process.env.OPEN_ROUTE_SERVICE_KEY; // Remplacez par votre clé API OpenRouteService
+  const apiKey = process.env.OPEN_ROUTE_SERVICE_KEY;
   const url = "https://api.openrouteservice.org/v2/directions/driving-car";
 
   try {
@@ -174,36 +160,27 @@ async function getRoute(start, end) {
       url: url,
       params: {
         api_key: apiKey,
-        start: start.join(","), // Format : 'longitude,latitude'
-        end: end.join(","), // Format : 'longitude,latitude'
+        start: start.join(","),
+        end: end.join(","),
       },
     });
 
-    console.log("Itinéraire :", response.data);
     return response.data;
   } catch (error) {
     console.error("Erreur lors de la récupération de l'itinéraire :", error);
   }
 }
 
-// Exemple d'utilisation :
-// Remplacez ces coordonnées par les points de départ et d'arrivée souhaités
-const startCoords = [8.681495, 49.41461];
-const endCoords = [8.687872, 49.420318];
-
-//getRoute(startCoords, endCoords);
-
 var myService = {
   ServiceTempsTrajet: {
     TempsTrajetPort: {
-      calculerTempsTrajet,
+      calculerTempsTrajet: calculTimeTravel,
     },
   },
 };
 
 var xml = require("fs").readFileSync("service.wsdl", "utf8");
 
-//http server example
 var server = http.createServer(function (request, response) {
   response.end("404: Not Found: " + request.url);
 });
@@ -213,14 +190,12 @@ soap.listen(server, "/wsdl", myService, xml, function () {
   console.log("server initialized");
 });
 
-//express server example
 var app = express();
 app.use(
   cors({
     origin: "https://morgan.makeprops.fr",
   })
 );
-//body parser middleware are supported (optional)
 app.use(
   bodyParser.raw({
     type: function () {
@@ -230,8 +205,6 @@ app.use(
   })
 );
 app.listen(8000, function () {
-  //Note: /wsdl route will be handled by soap module
-  //and all other routes & middleware will continue to work
   soap.listen(app, "/wsdl", myService, xml, function () {
     console.log("server initialized");
   });

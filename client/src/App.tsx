@@ -120,14 +120,18 @@ function App() {
   };
 
   return (
-    <div className="bg-light pt-5">
-      <div className="d-flex justify-content-center gap-2">
-        <ApolloProvider client={client}>
-          <VehiclesComponent setAutonomie={setAutonomie} />
-        </ApolloProvider>
+    <div className="pt-5" style={{
+      backgroundColor: "#f5f5f4",
+    }}>
+      <div className="d-flex justify-content-center">
+        <div className="d-flex flex-fill justify-content-center">
+          <ApolloProvider client={client}>
+            <VehiclesComponent setAutonomie={setAutonomie} />
+          </ApolloProvider>
+        </div>
 
         <div className="d-flex flex-column gap-3">
-          <div className="w-100">
+          <div className="w-100 card shadow p-3">
             <label htmlFor="autonomyInput" className="form-label">Autonomie</label>
             <input
               type="number"
@@ -139,11 +143,11 @@ function App() {
             />
             <div className="d-flex flex-row gap-2 justify-content-between p-2">
               <div className="d-flex flex-column gap-1">
-                <p>Départ</p>
+                <p style={{ marginBottom: 0 }}>Départ</p>
                 <LocationSearchInput setAddress={setAddressStart} />
               </div>
               <div className="d-flex flex-column gap-1">
-                <p>Arrivée</p>
+                <p style={{ marginBottom: 0 }}>Arrivée</p>
                 <LocationSearchInput setAddress={setAddressEnd} />
               </div>
             </div>
@@ -169,6 +173,8 @@ function App() {
               </div>
             </div>
           </div>
+        </div>
+        <div className="d-flex flex-fill justify-content-center">
           <Map
             display_name="test"
             coords={{ longitude: 40, latitude: 2 }}
