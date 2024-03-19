@@ -65,7 +65,7 @@ export function VehiclesComponent(props: VehiclesComponentProps) {
   );
 
   return (
-    <div className="card w-50 mt-3 p-3">
+    <div className="card shadow p-3">
       <h2>Liste de véhicule</h2>
       <input
         className="form-control"
